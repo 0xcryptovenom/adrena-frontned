@@ -50,6 +50,8 @@ function Loader(): JSX.Element {
 // initalized once, doesn't move afterwards.
 // actually twice, once on the server to `null` & once on the client.
 const CONFIG = initConfig();
+const PYTH_CONNECTION =
+  CONFIG && new Connection(CONFIG.pythnetRpc.url, 'processed');
 
 // Load cluster from URL then load the config and initialize the app.
 // When everything is ready load the main component
@@ -75,11 +77,14 @@ export default function App(props: AppProps) {
   // - when the client-side app boots..
   //   - and the RPC has been picked by usePRC hook.
   // No need to use an Effect as long as we guard with the correct conditions.
-  if (CONFIG !== null && activeRpc !== null && initStatus === 'not-started') {
+  if (
+    CONFIG !== null &&
+    PYTH_CONNECTION !== null &&
+    initStatus === 'not-started' &&
+    activeRpc !== null
+  ) {
     setInitStatus('starting');
-    // FIXME: Connections should be initialized outside of rendering.
-    const pythConnection = new Connection(CONFIG.pythnetRpc.url, 'processed');
-    initializeApp(CONFIG, activeRpc.connection, pythConnection).then(() => {
+    initializeApp(CONFIG, activeRpc.connection, PYTH_CONNECTION).then(() => {
       setInitStatus('done');
     });
   }
